@@ -1,0 +1,3 @@
+#!/bin/bash
+
+wget --config=wgetrc https://if177.aca.ntu.edu.tw/qcaureg/index.asp
