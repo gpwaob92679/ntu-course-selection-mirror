@@ -1,13 +1,50 @@
 from __future__ import annotations
 
+import datetime
 import http.client
 import mimetypes
+import os
+import pathlib
+import re
 import urllib.parse
 
 import flask
 import werkzeug.utils
 
-app = flask.Flask(__name__, static_folder='if177.aca.ntu.edu.tw')
+STATIC_FOLDER_PATTERN = re.compile(
+    r'if(177|192).aca.ntu.edu.tw(?P<time>_\d+_\d+)?')
+
+
+def discover_static_folder() -> pathlib.Path | None:
+    newest_folder = None
+    for folder in pathlib.Path().iterdir():
+        if not folder.is_dir():
+            continue
+        match = STATIC_FOLDER_PATTERN.fullmatch(folder.name)
+        if not match:
+            continue
+
+        clone_time = None
+        if match.group('time'):
+            try:
+                clone_time = datetime.datetime.strptime(
+                    match.group('time').strip('_'), '%Y%m%d_%H%M%S')
+            except ValueError:
+                pass
+        if clone_time is None:
+            # Assume time of clone is the creation time of folder.
+            clone_time = datetime.datetime.fromtimestamp(
+                os.path.getctime(folder))
+
+        if newest_folder is None or clone_time > newest_folder[1]:
+            newest_folder = (folder, clone_time)
+
+    if newest_folder is None:
+        return None
+    return newest_folder[0]
+
+
+app = flask.Flask(__name__, static_folder=discover_static_folder())
 
 
 def file_path_for_url(url: str,
