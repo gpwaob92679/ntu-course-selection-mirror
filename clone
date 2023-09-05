@@ -1,3 +1,6 @@
 #!/bin/bash
 
 wget --config=wgetrc https://if177.aca.ntu.edu.tw/qcaureg/index.asp
+if [[ -d "if177.aca.ntu.edu.tw" ]]; then
+  mv "if177.aca.ntu.edu.tw" "if177.aca.ntu.edu.tw_$(date +%Y%m%d_%H%M%S)"
+fi
